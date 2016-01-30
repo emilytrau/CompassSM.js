@@ -1,0 +1,25 @@
+{
+  "name": "CompassSM",
+  "version": "0.0.0",
+  "description": "An interface for Compass School Manager",
+  "main": "compass.js",
+  "keywords": [
+    "compass",
+    "school",
+    "manager"
+  ],
+  "homepage": "https://github.com/angustrau/CompassSM.js",
+  "bugs": {
+    "url": "https://github.com/angustrau/CompassSM.js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/angustrau/CompassSM.js.git"
+  },
+  "dependencies": {
+    "casperjs": "^1.1.0-beta3",
+    "cheerio": "^0.19.0",
+    "q": "^1.4.1",
+    "spooky": "^0.2.5"
+  }
+}
