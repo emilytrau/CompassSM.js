@@ -4,9 +4,13 @@ const Q = require("q");
 const request = require("request");
 const cheerio = require("cheerio");
 
+const ClassBase = require("./base.js");
+
 //Create Auth Mix-in
-let Auth = events.EventEmitter => class extends events.EventEmitter {
+let Auth = ClassBase => class extends ClassBase {
 	getNewToken() {
+		let deferred = Q.defer();
+
 		this.request = request.defaults({
 			baseUrl: this.config.url,
 			headers: {
