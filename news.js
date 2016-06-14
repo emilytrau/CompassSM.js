@@ -26,6 +26,7 @@ class Attachment {
 class NewsItem {
 	constructor(data, request) {
 		this.title = data.Title;
+		this.id = data.NewsItemId;
 		this.content = cheerio("<div>" + data.Content1 + "</div>").text();
 		this.author = data.UserName;
 		this.postTime = moment(data.PostDateTime, "DD\/MM\/YYYY - hh:mm a").clone().toDate();
