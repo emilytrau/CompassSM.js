@@ -1,74 +1,45 @@
-var Q = require("q");
-var cheerio = require("cheerio");
+"use strict";
+const events = require("events");
+const Q = require("q");
+const request = require("request");
+const cheerio = require("cheerio");
 
-function Auth(request, url, username, password) {
-	this.url = url;
-	this.username = username;
-	this.password = password;
-
-	this.request = request;
-
-	this.promise = this.reauth();
-}
-
-Auth.prototype.reauth = function() {
-	var deferred = Q.defer();
-
-	this.getSessionCookie()
-	.then(this.login)
-	.then(function() {
-		this.request("/", function(error, response, body) {
-			console.log(body);
+//Create Auth Mix-in
+let Auth = events.EventEmitter => class extends events.EventEmitter {
+	getNewToken() {
+		this.request = request.defaults({
+			baseUrl: this.config.url,
+			headers: {
+				"User-Agent": this.config.useragent || "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.84 Safari/537.36" //Chrome 51
+			},
+			followAllRedirects: true,
+			jar: request.jar()
 		})
-	})
 
-	return deferred.promise;
-}
+		this.request("/login.aspx", (error, response, body) => {
+			if (!error && response.statusCode == 200) {
+				//Get unique session codes
+				let $ = cheerio.load(body);
+				let __VIEWSTATE = $("#__VIEWSTATE").attr("value");
+				let __VIEWSTATEGENERATOR = $("#__VIEWSTATEGENERATOR").attr("value");
 
-Auth.prototype.getSessionCookie = function() {
-	var deferred = Q.defer();
-
-	var options = {
-		uri: "/"
+				this.request.post("/login.aspx", {
+					form: {
+						__VIEWSTATE: __VIEWSTATE,
+						__VIEWSTATEGENERATOR: __VIEWSTATEGENERATOR,
+						username: this.config.username,
+						password: this.config.password,
+						button1: "Sign in",
+						rememberMeChk: "on"
+					}
+				}, (error, response, body) => {
+					console.log(body);
+				})
+			} else {
+				this.emit("compass_error", "Invalid url", error);
+			}
+		});
 	}
-	this.request.get(options, function(error, response, body) {
-		if (!error && response.statusCode == 200) {
-			deferred.resolve(body)
-		} else {
-			deferred.reject(error);
-		}
-	});
-
-	return deferred.promise;
-}
-
-Auth.prototype.login = function(body) {
-	var deferred = Q.defer();
-
-	var $ = cheerio.load(body);
-
-	var form = $("#form_of_login");
-
-	var formOptions = {
-		"__VIEWSTATE": form.find("#__VIEWSTATE").val(),
-		"username": compass.username,
-		"password": compass.password,
-		"button1": "Sign in",
-		"__VIEWSTATEGENERATOR": form.find("#__VIEWSTATEGENERATOR").val()
-	}
-
-	var options = {
-		uri: "login.aspx"
-	}
-	this.request.post(options, {form: formOptions}, function(error, response, body) {
-		if (!error && response.statusCode == 200) {
-			deferred.resolve();
-		} else {
-			deferred.reject(error);
-		}
-	});
-
-	return deferred.promise();
 }
 
 module.exports = Auth;
