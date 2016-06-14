@@ -2,6 +2,7 @@
 const Q = require("q");
 
 const ClassBase = require("./base.js");
+const log = require("./log.js");
 const Auth = require("./auth.js");
 const News = require("./news.js");
 const Schedule = require("./schedule.js");
@@ -12,8 +13,14 @@ class Compass extends Auth(ClassBase) {
 	constructor(config) {
 		super();
 
+		let defaultConfig = {
+			useragent: "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.84 Safari/537.36", //Chrome 51
+			sessionTimeout: 3600000,
+			debug: false
+		}
 		if (!config || !config.url || typeof(config.url) != "string" || !config.username || !config.password) throw new Error("Invalid config");
-		this.config = config;
+		for (var key in config) {defaultConfig[key] = config[key];}
+		this.config = defaultConfig;
 
 		this.getNewSession()
 		.then(() => {

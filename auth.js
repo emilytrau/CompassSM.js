@@ -1,20 +1,21 @@
 "use strict";
 const Q = require("q");
-const request = require("request");
+const _request = require("request");
 const cheerio = require("cheerio");
 
 const ClassBase = require("./base.js");
+const log = require("./log.js");
 
 //Create Auth Mix-in
 let Auth = ClassBase => class extends ClassBase {
 	getNewSession() {
 		let deferred = Q.defer();
 
-		let cookieJar = request.jar();
-		let request = request.defaults({
+		let cookieJar = _request.jar();
+		let request = _request.defaults({
 			baseUrl: this.config.url,
 			headers: {
-				"User-Agent": this.config.useragent || "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.84 Safari/537.36" //Chrome 51
+				"User-Agent": this.config.useragent
 			},
 			followAllRedirects: true,
 			jar: cookieJar
@@ -22,6 +23,10 @@ let Auth = ClassBase => class extends ClassBase {
 
 		request("/login.aspx", (error, response, body) => {
 			if (!error && response.statusCode == 200) {
+				if (this.config.debug) {
+					log("Auth - Found website");
+				}
+
 				//Get unique session codes
 				let $ = cheerio.load(body);
 				let __VIEWSTATE = $("#__VIEWSTATE").attr("value");
@@ -38,6 +43,10 @@ let Auth = ClassBase => class extends ClassBase {
 					}
 				}, (error, response, body) => {
 					if (!error && response.statusCode == 200) {
+						if (this.config.debug) {
+							log("Auth - Logged in!");
+						}
+						
 						//Successfully created session cookies
 						this.request = request;
 						this.cookieJar = cookieJar;
@@ -54,7 +63,7 @@ let Auth = ClassBase => class extends ClassBase {
 
 		//Create a new session every hour by default
 		if (this.sessionTimeoutID) clearTimeout(this.sessionTimeoutID);
-		this.sessionTimeoutID = sessionTimeout((t) => {t.getNewSession.call(t)}, this.config.sessionTimeout || 3600000, this);
+		this.sessionTimeoutID = setTimeout((t) => {t.getNewSession.call(t)}, this.config.sessionTimeout, this);
 
 		return deferred.promise;
 	}
