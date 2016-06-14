@@ -46,11 +46,12 @@ let Auth = ClassBase => class extends ClassBase {
 						if (this.config.debug) {
 							log("Auth - Logged in!");
 						}
-						
+
 						//Successfully created session cookies
 						this.request = request;
 						this.cookieJar = cookieJar;
 
+						this.emit("auth", "done");
 						deferred.resolve();
 					} else {
 						deferred.reject(error);

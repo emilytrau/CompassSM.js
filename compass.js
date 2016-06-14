@@ -3,6 +3,7 @@ const Q = require("q");
 
 const ClassBase = require("./base.js");
 const log = require("./log.js");
+
 const Auth = require("./auth.js");
 const News = require("./news.js");
 const Schedule = require("./schedule.js");
@@ -25,11 +26,11 @@ class Compass extends Auth(ClassBase) {
 		this.getNewSession()
 		.then(() => {
 			//Logged in
-			//Load news and pass it a wrapper function to get the current request object as well as the config
+			//Load modules
 			this.news = new News(() => {return this.request;});
-			return this.news.getNews();
+
+			this.emit("compass", "loaded");
 		})
-		.done();
 	}
 }
 
