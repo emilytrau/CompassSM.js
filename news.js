@@ -10,12 +10,7 @@ class Attachment {
 		this.name = data.name;
 		this.isImage = data.IsImage;
 		this.request = request;
-
-		if (this.isImage) {
-			this.url = "/ImageDownload/1/" + data.AssetId;
-		} else {
-			this.url = "/Services/FileDownload/FileRequestHandler?FileDownloadType=1&file=" + data.AssetId;
-		}
+		this.url = "/Services/FileDownload/FileRequestHandler?FileDownloadType=1&file=" + data.AssetId;
 	}
 
 	download(stream) {
