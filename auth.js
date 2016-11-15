@@ -1,74 +1,73 @@
-var Q = require("q");
-var cheerio = require("cheerio");
+"use strict";
+const Q = require("q");
+const _request = require("request");
+const cheerio = require("cheerio");
 
-function Auth(request, url, username, password) {
-	this.url = url;
-	this.username = username;
-	this.password = password;
+const ClassBase = require("./base.js");
+const log = require("./log.js");
 
-	this.request = request;
+//Create Auth Mix-in
+let Auth = ClassBase => class extends ClassBase {
+	getNewSession() {
+		let deferred = Q.defer();
 
-	this.promise = this.reauth();
-}
-
-Auth.prototype.reauth = function() {
-	var deferred = Q.defer();
-
-	this.getSessionCookie()
-	.then(this.login)
-	.then(function() {
-		this.request("/", function(error, response, body) {
-			console.log(body);
+		let cookieJar = _request.jar();
+		let request = _request.defaults({
+			baseUrl: this.config.url,
+			headers: {
+				"User-Agent": this.config.useragent
+			},
+			followAllRedirects: true,
+			jar: cookieJar
 		})
-	})
 
-	return deferred.promise;
-}
+		request("/login.aspx", (error, response, body) => {
+			if (!error && response.statusCode == 200) {
+				if (this.config.debug) {
+					log("Auth - Found website");
+				}
 
-Auth.prototype.getSessionCookie = function() {
-	var deferred = Q.defer();
+				//Get unique session codes
+				let $ = cheerio.load(body);
+				let __VIEWSTATE = $("#__VIEWSTATE").attr("value");
+				let __VIEWSTATEGENERATOR = $("#__VIEWSTATEGENERATOR").attr("value");
 
-	var options = {
-		uri: "/"
+				request.post("/login.aspx", {
+					form: {
+						__VIEWSTATE: __VIEWSTATE,
+						__VIEWSTATEGENERATOR: __VIEWSTATEGENERATOR,
+						username: this.config.username,
+						password: this.config.password,
+						button1: "Sign in",
+						rememberMeChk: "on"
+					}
+				}, (error, response, body) => {
+					if (!error && response.statusCode == 200) {
+						if (this.config.debug) {
+							log("Auth - Logged in!");
+						}
+
+						//Successfully created session cookies
+						this.request = request;
+						this.cookieJar = cookieJar;
+
+						this.emit("auth", "done");
+						deferred.resolve();
+					} else {
+						deferred.reject(error);
+					}
+				});
+			} else {
+				deferred.reject(error);
+			}
+		});
+
+		//Create a new session every hour by default
+		if (this.sessionTimeoutID) clearTimeout(this.sessionTimeoutID);
+		this.sessionTimeoutID = setTimeout((t) => {t.getNewSession.call(t)}, this.config.sessionTimeout, this);
+
+		return deferred.promise;
 	}
-	this.request.get(options, function(error, response, body) {
-		if (!error && response.statusCode == 200) {
-			deferred.resolve(body)
-		} else {
-			deferred.reject(error);
-		}
-	});
-
-	return deferred.promise;
-}
-
-Auth.prototype.login = function(body) {
-	var deferred = Q.defer();
-
-	var $ = cheerio.load(body);
-
-	var form = $("#form_of_login");
-
-	var formOptions = {
-		"__VIEWSTATE": form.find("#__VIEWSTATE").val(),
-		"username": compass.username,
-		"password": compass.password,
-		"button1": "Sign in",
-		"__VIEWSTATEGENERATOR": form.find("#__VIEWSTATEGENERATOR").val()
-	}
-
-	var options = {
-		uri: "login.aspx"
-	}
-	this.request.post(options, {form: formOptions}, function(error, response, body) {
-		if (!error && response.statusCode == 200) {
-			deferred.resolve();
-		} else {
-			deferred.reject(error);
-		}
-	});
-
-	return deferred.promise();
 }
 
 module.exports = Auth;
