@@ -20,6 +20,7 @@
     "url": "https://github.com/angustrau/CompassSM.js.git"
   },
   "dependencies": {
-
+    "cheerio": "^0.22.0",
+    "request": "^2.78.0"
   }
 }
