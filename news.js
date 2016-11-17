@@ -9,15 +9,15 @@ class Attachment {
     }
 
     async download() {
-        let [body, res] = await this.auth.async_request(path, {
-            encoding: null // Return a buffer
-        });
-        
-        if (res.statusCode != 200) {
-            throw new Error("Error downloading attachment. Invalid status code " + res.statusCode);
-        }
+        try {
+            let [body, res] = await this.auth.get(path, {
+                encoding: null // Return a buffer
+            });
 
-        return body;
+            return body;
+        } catch(e) {
+            throw e;
+        }
     }
 }
 
@@ -31,13 +31,9 @@ class User {
 
     async downloadImage() {
         try {
-            let [body, res] = await this.auth.async_request(this.imagepath, {
+            let [body, res] = await this.auth.get(this.imagepath, {
                 encoding: null // Return a buffer
             });
-            
-            if (res.statusCode != 200) {
-                throw new Error("Error downloading image. Invalid status code " + res.statusCode);
-            }
 
             return body;
         } catch (e) {
@@ -68,7 +64,7 @@ module.exports = class News {
 
     async get(start = 0, limit = 10) {
         try {
-            let [body, res] = await this.auth.async_request("/Services/NewsFeed.svc/GetMyNewsFeedPaged", {
+            let [body, res] = await this.auth.get("/Services/NewsFeed.svc/GetMyNewsFeedPaged", {
                 method: "POST",
                 qs: {
                     "sessionstate": "readonly"
@@ -79,10 +75,6 @@ module.exports = class News {
                     start: start.toString()
                 }
             });
-
-            if (res.statusCode != 200) {
-                throw new Error("Error fetching news feed. Invalid status code " + res.statusCode);
-            }
 
             let newsitems = [];
             body.d.data.forEach((item) => {

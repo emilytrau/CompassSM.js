@@ -1,5 +1,15 @@
 const request = require("request");
 const cheerio = require("cheerio");
+const url = require("url");
+
+class StatusCodeError extends Error {
+	constructor(code) {
+		const message = `Invalid status code ${code}`;
+		super(message);
+		this.message = message;
+		this.name = 'StatusCodeError';
+	}
+}
 
 module.exports = class Auth { 
 	constructor(url, username = "", password = "", options = {}) {
@@ -19,11 +29,7 @@ module.exports = class Auth {
 
 		this.request = request.defaults(options);
 	}
-	
-	async initialise() {
-		await this.reauth();	
-	}
-	
+
 	async reauth() {
 		// Start with a blank cookie jar
 		let j = request.jar();
@@ -36,15 +42,11 @@ module.exports = class Auth {
 		// Retrieves a session cookie
 		let $login;
 		try {
-			let [body, res] = await this.async_request("/login.aspx", {
+			let [body, res] = await this.get("/login.aspx", {
 				qs: {
 					"sessionstate": "disabled"
 				}
 			});
-
-			if (res.statusCode != 200) {
-				throw new Error("Invalid statuscode " + res.statusCode);
-			}
 
 			$login = cheerio.load(body);
 		} catch(e) {
@@ -54,7 +56,7 @@ module.exports = class Auth {
 		// Log in
 		// Get an auth cookie
 		try {
-			let [body, res] = await this.async_request("/login.aspx", {
+			let [body, res] = await this.get("/login.aspx", {
 				method: "POST",
 				headers: {
 					"Cache-Control": "max-age=0"
@@ -69,20 +71,15 @@ module.exports = class Auth {
 					button1: "Sign in",
 					__VIEWSTATEGENERATOR: $login("#__VIEWSTATEGENERATOR").val()
 				},
-				maxRedirects: 0
+				maxRedirects: 0,
+				intendedStatusCode: 302
 			});
-
-			if (res.statusCode != 302) {
-				throw new Error("Invalid statuscode " + res.statusCode);
-			}
 		} catch(e) {
 			throw e;
 		}
 	}
 	
-	async_request(path = "", options = {}) {
-		options.uri = path;
-
+	async_request(options = {}) {
 		return new Promise((resolve, reject) => {
 			this.request(options, (err, res, body) => {
 				if (err) {
@@ -93,5 +90,36 @@ module.exports = class Auth {
 				}
 			});
 		});
+	}
+
+	async get(path = "", options = {}) {
+		options.uri = path;
+		const intendedStatusCode = options.intendedStatusCode || 200;
+		
+		let body, res;
+		try {
+			[body, res] = await async_request(options);
+
+			if (res.statusCode != intendedStatusCode) {
+				// Request yielded unexpected result
+				// Check if auth failed
+				const redirectLocation = url.parse(res.headers.Location || "").pathname;
+				if (res.statusCode === 302 && redirectLocation === "/login.aspx")
+				{
+					// Auth expired
+					// Reauthenticate
+					await this.reauth();
+					// Try again
+					[body, res] = await async_request(options);
+					if (res.statusCode != intendedStatusCode) {
+						throw new StatusCodeError(res.statusCode);
+					}
+				} else {
+					throw new StatusCodeError(res.statusCode);
+				}
+			}
+		} catch(e) {
+			throw e;
+		}
 	}
 }

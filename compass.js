@@ -12,10 +12,6 @@ module.exports = class Compass {
 			this.news = new News(this.auth);
 		}
 	}
-
-	async initialise() {
-		await this.auth.initialise();
-	}
 }
 
 const repl = require("repl");

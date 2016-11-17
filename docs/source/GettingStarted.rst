@@ -20,9 +20,9 @@ This code connects to Compass and fetches the news feed::
 
 	const Compass = require("CompassSM");
 
-	const server = process.env.compass_server; // https://XXX-XXX.compass.education OR https://XXX.XXX.jdlf.com.au
-	const username = process.env.compass_username;
-	const password = process.env.compass_password;
+	const server = process.env.COMPASS_SERVER; // https://XXX-XXX.compass.education OR https://XXX.XXX.jdlf.com.au
+	const username = process.env.COMPASS_USERNAME;
+	const password = process.env.COMPASS_PASSWORD;
 
 	const options = {
 		// The modules to enable
