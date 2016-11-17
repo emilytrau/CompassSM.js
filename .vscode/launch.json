@@ -1,0 +1,31 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Launch",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceRoot}/compass.js",
+			"stopOnEntry": false,
+			"args": [],
+			"cwd": "${workspaceRoot}/.",
+			"runtimeExecutable": null,
+			"runtimeArgs": [
+				"--nolazy",
+				"--harmony_async_await"
+			],
+			"env": {
+				"NODE_ENV": "development"
+			},
+			"externalConsole": false,
+			"sourceMaps": false,
+			"outDir": null
+		},
+		{
+			"name": "Attach",
+			"type": "node",
+			"request": "attach",
+			"port": 5858
+		}
+	]
+}

@@ -1,8 +1,8 @@
 let request = require("request");
 let cheerio = require("cheerio");
 
-module.exports = class Auth {
-	constructor(url, username, password) {
+module.exports = class Auth { 
+	constructor(url, username = "", password = "") {
 		this.username = username;
 		this.password = password;
 
@@ -11,22 +11,20 @@ module.exports = class Auth {
 			method: "GET",
 			headers: {
 				// Spoof Chrome 54
-				"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-				"Accept-Encoding": "gzip, deflate, sdch, br",
+				"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/;q=0.8",
 				"Accept-Language": "en-US,en;q=0.8",
 				"Connection": "keep-alive",
-				"Host": "mhs-vic.compass.education",
 				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36"
 			},
-			followRedirect: false,
-			encoding: "utf8",
-			jar: true
+			jar: true,
+			strictSSL: false
 		});
-
-		// Authenticate with compass
-		reauth();
 	}
-
+	
+	async initialise() {
+		await this.reauth();	
+	}
+	
 	async reauth() {
 		// Start with a blank cookie jar
 		let j = request.jar();
@@ -39,11 +37,7 @@ module.exports = class Auth {
 		// Retrieves a session cookie
 		let $login;
 		try {
-			let [body, res] = await this.get("/login.aspx", {
-				qs: {
-					"sessionstate": "disabled"
-				}
-			});
+			let [body, res] = await this.async_request("/login.aspx?sessionstate=disabled");
 
 			if (res.statusCode != 200) {
 				throw new Error("Invalid statuscode " + res.statusCode);
@@ -57,12 +51,10 @@ module.exports = class Auth {
 		// Log in
 		// Get an auth cookie
 		try {
-			let [body, res] = await this.get("/login.aspx", {
+			let [body, res] = await this.async_request("/login.aspx?sessionstate=disabled", {
+				method: "POST",
 				headers: {
 					"Cache-Control": "max-age=0"
-				},
-				qs: {
-					"sessionstate": "disabled"
 				},
 				form: {
 					__VIEWSTATE: $login("#__VIEWSTATE").val(),
@@ -70,7 +62,8 @@ module.exports = class Auth {
 					password: this.password,
 					button1: "Sign in",
 					__VIEWSTATEGENERATOR: $login("#__VIEWSTATEGENERATOR").val()
-				}
+				},
+				maxRedirects: 0
 			});
 
 			if (res.statusCode != 302) {
@@ -80,8 +73,8 @@ module.exports = class Auth {
 			throw e;
 		}
 	}
-
-	get(path, options) {
+	
+	async_request(path = "", options = {}) {
 		options.uri = path;
 
 		return new Promise((resolve, reject) => {
