@@ -1,24 +1,23 @@
-let request = require("request");
-let cheerio = require("cheerio");
+const request = require("request");
+const cheerio = require("cheerio");
 
 module.exports = class Auth { 
-	constructor(url, username = "", password = "") {
+	constructor(url, username = "", password = "", options = {}) {
 		this.username = username;
 		this.password = password;
 
-		this.request = request.defaults({
-			baseUrl: url,
-			method: "GET",
-			headers: {
-				// Spoof Chrome 54
-				"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/;q=0.8",
-				"Accept-Language": "en-US,en;q=0.8",
-				"Connection": "keep-alive",
-				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36"
-			},
-			jar: true,
-			strictSSL: false
-		});
+		options.baseUrl = url;
+		options.method = "GET";
+		options.headers = {
+			// Spoof Chrome 54
+			"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/;q=0.8",
+			"Accept-Language": "en-US,en;q=0.8",
+			"Connection": "keep-alive",
+			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36"
+		};
+		options.jar = true;
+
+		this.request = request.defaults(options);
 	}
 	
 	async initialise() {
@@ -37,7 +36,11 @@ module.exports = class Auth {
 		// Retrieves a session cookie
 		let $login;
 		try {
-			let [body, res] = await this.async_request("/login.aspx?sessionstate=disabled");
+			let [body, res] = await this.async_request("/login.aspx", {
+				qs: {
+					"sessionstate": "disabled"
+				}
+			});
 
 			if (res.statusCode != 200) {
 				throw new Error("Invalid statuscode " + res.statusCode);
@@ -51,10 +54,13 @@ module.exports = class Auth {
 		// Log in
 		// Get an auth cookie
 		try {
-			let [body, res] = await this.async_request("/login.aspx?sessionstate=disabled", {
+			let [body, res] = await this.async_request("/login.aspx", {
 				method: "POST",
 				headers: {
 					"Cache-Control": "max-age=0"
+				},
+				qs: {
+					"sessionstate": "disabled"
 				},
 				form: {
 					__VIEWSTATE: $login("#__VIEWSTATE").val(),

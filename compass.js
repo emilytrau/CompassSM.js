@@ -1,8 +1,17 @@
-let Auth = require("./auth");
+const Auth = require("./auth");
+const News = require("./news");
 
 module.exports = class Compass {
-	constructor(serverurl, username, password) {
-		this.auth = new Auth(serverurl, username, password);
+	constructor(serverurl, username, password, options = {}) {
+		this.options = options;
+		this.auth = new Auth(serverurl, username, password, this.options.requests);
+
+		const modules = this.options.modules || [];
+		console.log(modules)
+		if (modules.indexOf("news") != -1) {
+			// News module is enabled
+			this.news = new News(this.auth);
+		}
 	}
 
 	async initialise() {
