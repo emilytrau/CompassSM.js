@@ -61,9 +61,9 @@
 <p>This code connects to Compass and fetches the news feed:</p>
 <div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kr">const</span> <span class="nx">Compass</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;CompassSM&quot;</span><span class="p">);</span>
 
-<span class="kr">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">compass_server</span><span class="p">;</span> <span class="c1">// https://XXX-XXX.compass.education OR https://XXX.XXX.jdlf.com.au</span>
-<span class="kr">const</span> <span class="nx">username</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">compass_username</span><span class="p">;</span>
-<span class="kr">const</span> <span class="nx">password</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">compass_password</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">COMPASS_SERVER</span><span class="p">;</span> <span class="c1">// https://XXX-XXX.compass.education OR https://XXX.XXX.jdlf.com.au</span>
+<span class="kr">const</span> <span class="nx">username</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">COMPASS_USERNAME</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">password</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">COMPASS_PASSWORD</span><span class="p">;</span>
 
 <span class="kr">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
         <span class="c1">// The modules to enable</span>

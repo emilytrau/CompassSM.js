@@ -1,6 +1,6 @@
 const striptags = require("striptags");
 
-class Attachment {
+class NewsAttachment {
     constructor(auth, data) {
         this.auth = auth;
         this.id = data.AssetId;
@@ -21,7 +21,7 @@ class Attachment {
     }
 }
 
-class User {
+class NewsUser {
     constructor(auth, data) {
         this.auth = auth;
         this.id = data.UserId;
@@ -48,11 +48,11 @@ class NewsItem {
         this.title = data.Title;
         this.content = striptags(data.Content1);
         this.postTime = new Date(data.PostDateTime);
-        this.user = new User(auth, data);
+        this.user = new NewsUser(auth, data);
 
         this.attachments = [];
         data.Attachments.forEach((item) => {
-            this.attachments.push(new Attachment(auth, item));
+            this.attachments.push(new NewsAttachment(auth, item));
         }, this)
     }
 }
