@@ -13,10 +13,3 @@ Compass
 
           * ``news``
         * ``request`` - An object containing options to pass to request.js. See https://github.com/request/request#requestoptions-callback.
-
-.. js:function:: async compass.initialise()
-
-    Initialises the Compass client. Must be called before any other methods.
-    
-    :throws dsda: dadsa
-    :returns: Nothing.
