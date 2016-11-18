@@ -1,3 +1,4 @@
+const debug = require("./debug")("Auth");
 const request = require("request");
 const cheerio = require("cheerio");
 const url = require("url");
@@ -5,14 +6,17 @@ const url = require("url");
 class StatusCodeError extends Error {
 	constructor(code) {
 		const message = `Invalid status code ${code}`;
+		debug(message);
 		super(message);
 		this.message = message;
 		this.name = 'StatusCodeError';
+		this.statusCode = code;
 	}
 }
 
 module.exports = class Auth { 
 	constructor(url, username = "", password = "", options = {}) {
+		debug("Initialising");
 		this.username = username;
 		this.password = password;
 
@@ -31,6 +35,7 @@ module.exports = class Auth {
 	}
 
 	async reauth() {
+		debug("Authenticating");
 		// Start with a blank cookie jar
 		let j = request.jar();
 		// Overide current cookie jar with blank one
@@ -40,6 +45,7 @@ module.exports = class Auth {
 
 		// Get the login page
 		// Retrieves a session cookie
+		debug("Getting session cookie");
 		let $login;
 		try {
 			let [body, res] = await this.get("/login.aspx", {
@@ -50,11 +56,13 @@ module.exports = class Auth {
 
 			$login = cheerio.load(body);
 		} catch(e) {
+			debug("Error getting session cookie");
 			throw e;
 		}
 
 		// Log in
 		// Get an auth cookie
+		debug("Getting auth cookie");
 		try {
 			let [body, res] = await this.get("/login.aspx", {
 				method: "POST",
@@ -74,7 +82,9 @@ module.exports = class Auth {
 				maxRedirects: 0,
 				intendedStatusCode: 302
 			});
+			debug("Authenticated");
 		} catch(e) {
+			debug("Error getting auth cookie");
 			throw e;
 		}
 	}
@@ -84,7 +94,6 @@ module.exports = class Auth {
 			this.request(options, (err, res, body) => {
 				if (err) {
 					reject(err);
-					return;
 				} else {
 					resolve([body, res]);
 				}
@@ -96,28 +105,26 @@ module.exports = class Auth {
 		options.uri = path;
 		const intendedStatusCode = options.intendedStatusCode || 200;
 		
+		debug(`Requesting ${path}, expecting status ${intendedStatusCode}`);
+
 		let body, res;
 		try {
-			[body, res] = await async_request(options);
+			[body, res] = await this.async_request(options);
 
 			if (res.statusCode != intendedStatusCode) {
 				// Request yielded unexpected result
-				// Check if auth failed
-				const redirectLocation = url.parse(res.headers.Location || "").pathname;
-				if (res.statusCode === 302 && redirectLocation === "/login.aspx")
-				{
-					// Auth expired
-					// Reauthenticate
-					await this.reauth();
-					// Try again
-					[body, res] = await async_request(options);
-					if (res.statusCode != intendedStatusCode) {
-						throw new StatusCodeError(res.statusCode);
-					}
-				} else {
+				// Try to reauth
+				debug("Request failed, trying reauth");
+				await this.reauth();
+				// Try again
+				debug(`Retrying request to ${path}`);
+				[body, res] = await this.async_request(options);
+				if (res.statusCode != intendedStatusCode) {
 					throw new StatusCodeError(res.statusCode);
 				}
 			}
+			debug("Request successful");
+			return [body, res];
 		} catch(e) {
 			throw e;
 		}

@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "cheerio": "^0.22.0",
+    "debug": "^2.3.2",
     "request": "^2.78.0",
     "striptags": "^2.1.1"
   }

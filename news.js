@@ -1,14 +1,16 @@
+const debug = require("./debug")("News");
 const striptags = require("striptags");
 
 class NewsAttachment {
     constructor(auth, data) {
         this.auth = auth;
         this.id = data.AssetId;
-        this.name = data.Name;
+        this.name = data.OriginalFileName;
         this.path = `/Services/FileDownload/FileRequestHandler?FileDownloadType=1&file=${this.id}`;
     }
 
     async download() {
+        debug(`Downloading attachment ${this.path}`);
         try {
             let [body, res] = await this.auth.get(path, {
                 encoding: null // Return a buffer
@@ -30,6 +32,7 @@ class NewsUser {
     }
 
     async downloadImage() {
+        debug(`Downloading image ${this.imagepath}`);
         try {
             let [body, res] = await this.auth.get(this.imagepath, {
                 encoding: null // Return a buffer
@@ -59,15 +62,20 @@ class NewsItem {
 
 module.exports = class News {
     constructor(auth) {
+        debug("Initialising");
         this.auth = auth;
     }
 
     async get(start = 0, limit = 10) {
+        debug("Getting news");
         try {
             let [body, res] = await this.auth.get("/Services/NewsFeed.svc/GetMyNewsFeedPaged", {
                 method: "POST",
                 qs: {
                     "sessionstate": "readonly"
+                },
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
                 },
                 json: {
                     activityId: null,
@@ -75,6 +83,7 @@ module.exports = class News {
                     start: start.toString()
                 }
             });
+            debug("Got response");
 
             let newsitems = [];
             body.d.data.forEach((item) => {

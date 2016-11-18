@@ -1,8 +1,11 @@
+const debug = require("./debug")("Core");
+
 const Auth = require("./auth");
 const News = require("./news");
 
 module.exports = class Compass {
 	constructor(serverurl, username, password, options = {}) {
+		debug("Initialising Compass");
 		this.options = options;
 		this.auth = new Auth(serverurl, username, password, this.options.request);
 

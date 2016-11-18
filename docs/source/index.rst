@@ -1,4 +1,4 @@
-Welcome to CompassSM.js's documentation!
+CompassSM.js Docs
 ========================================
 
 Contents:
@@ -9,11 +9,4 @@ Contents:
    GettingStarted
    Compass
    Modules
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   Errors

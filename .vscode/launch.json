@@ -15,7 +15,8 @@
 				"--harmony_async_await"
 			],
 			"env": {
-				"NODE_ENV": "development"
+				"NODE_ENV": "development",
+				"DEBUG": "CompassSM"
 			},
 			"externalConsole": false,
 			"sourceMaps": false,
