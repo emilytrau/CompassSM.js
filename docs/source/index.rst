@@ -9,4 +9,5 @@ Contents:
    GettingStarted
    Compass
    Modules
+   Auth
    Errors

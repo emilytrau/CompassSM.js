@@ -36,6 +36,8 @@ This code connects to Compass and fetches the news feed::
 
 	// Run the folowing code asynchronously
 	(async () => {
+		// Initialise
+		await c.initialise();
 		// Fetch the news
 		let news = await c.news.get();
 		console.log(news);

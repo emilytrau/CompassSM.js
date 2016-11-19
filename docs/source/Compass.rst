@@ -12,4 +12,9 @@ Compass
         * ``modules`` - An array that lists the Compass features to enable. Available options are:
 
           * ``news``
+          * ``calendar``
         * ``request`` - An object containing options to pass to request.js. See https://github.com/request/request#requestoptions-callback.
+
+.. js:function::  async compass.initialise()
+
+    Initialises Compass library, as the process is asynchronous.

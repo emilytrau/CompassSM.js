@@ -4,3 +4,4 @@ Modules
    :maxdepth: 2
 
    Modules/News
+   Modules/Calendar

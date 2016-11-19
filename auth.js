@@ -2,15 +2,12 @@ const debug = require("./debug")("Auth");
 const request = require("request");
 const cheerio = require("cheerio");
 const url = require("url");
+const StatusCodeError = require("./error").StatusCodeError;
 
-class StatusCodeError extends Error {
-	constructor(code) {
-		const message = `Invalid status code ${code}`;
-		debug(message);
-		super(message);
-		this.message = message;
-		this.name = 'StatusCodeError';
-		this.statusCode = code;
+class User {
+	constructor(body) {
+		this.username = body.match(/Compass.organisationUserSussiId = "(\w+)";/)[1];
+		this.id = parseInt(body.match(/Compass.organisationUserId = (\d+);/)[1]);
 	}
 }
 
@@ -32,6 +29,10 @@ module.exports = class Auth {
 		options.jar = true;
 
 		this.request = request.defaults(options);
+	}
+
+	async initialise() {
+		await this.reauth();
 	}
 
 	async reauth() {
@@ -85,6 +86,18 @@ module.exports = class Auth {
 			debug("Authenticated");
 		} catch(e) {
 			debug("Error getting auth cookie");
+			throw e;
+		}
+
+		// Get user info
+		debug("Getting user info");
+		try {
+			let [body, res] = await this.get("/");
+
+			this.user = new User(body);
+			debug("Got user info");
+		} catch(e) {
+			debug("Error getting user info");
 			throw e;
 		}
 	}

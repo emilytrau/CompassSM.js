@@ -1,0 +1,21 @@
+Auth
+====
+
+.. js:function:: async compass.auth.reauth()
+
+    Clears session and reauthenticates with Compass from scratch.
+
+.. js:attribute:: compass.auth.user
+
+    The currently signed in ``User``.
+
+User
+====
+
+.. js:attribute:: user.username
+
+    The user's username.
+
+.. js:attribute:: user.id
+
+    The hidden identifier used by Compass internals.

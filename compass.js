@@ -2,6 +2,7 @@ const debug = require("./debug")("Core");
 
 const Auth = require("./auth");
 const News = require("./news");
+const Calendar = require("./calendar");
 
 module.exports = class Compass {
 	constructor(serverurl, username, password, options = {}) {
@@ -14,6 +15,13 @@ module.exports = class Compass {
 			// News module is enabled
 			this.news = new News(this.auth);
 		}
+		if (modules.indexOf("calendar") != -1) {
+			this.calendar = new Calendar(this.auth);
+		}
+	}
+
+	async initialise() {
+		await this.auth.initialise();
 	}
 }
 
